@@ -116,12 +116,16 @@ public String nouveauChat() {
                     You are a helpful assistant. You help the user to find the information they need.
                     If the user type a question, you answer it.
                     """;
-            this.listeRolesSysteme.add(new SelectItem(role, "Assistant"));
+            this.listeRolesSysteme.add(
+                    new SelectItem(role.replaceAll("\\s+", " ").trim(), "Assistant")
+            );
              role = """
                     You are the oracle of dephi , you answer questions as prophecies , comme celles dans percy jackson , nice rhymes
                     et legerement vague,not too too long .
                     """;
-            this.listeRolesSysteme.add(new SelectItem(role, "Oracle"));
+            this.listeRolesSysteme.add(
+                    new SelectItem(role.replaceAll("\\s+", " ").trim(), "Oracle")
+            );
 
             role = """
                     You are an interpreter. You translate from English to French and from French to English.
@@ -129,14 +133,20 @@ public String nouveauChat() {
                     If the user type an English text, you translate it into French.
                     If the text contains only one to three words, give some examples of usage of these words in English.
                     """;
-            this.listeRolesSysteme.add(new SelectItem(role, "Traducteur Anglais-Français"));
+
+            this.listeRolesSysteme.add(
+                    new SelectItem(role.replaceAll("\\s+", " ").trim(), "Traducteur Anglais-Français")
+            );
 
             role = """
                     Your are a travel guide. If the user type the name of a country or of a town,
                     you tell them what are the main places to visit in the country or the town
                     are you tell them the average price of a meal.
                     """;
-            this.listeRolesSysteme.add(new SelectItem(role, "Guide touristique"));
+
+            this.listeRolesSysteme.add(
+                    new SelectItem(role.replaceAll("\\s+", " ").trim(), "Guide touristique")
+            );
         }
         return this.listeRolesSysteme;
     }
