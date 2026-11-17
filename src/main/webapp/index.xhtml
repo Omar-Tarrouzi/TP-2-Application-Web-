@@ -45,6 +45,14 @@
                             <button type="button" onclick="copyToClipboard('question')">Copier question</button>
                             <button type="button" onclick="toutEffacer()">Effacer question et réponse</button>
                         </h:panelGroup>
+
+                        <h:panelGroup>
+                            <h:outputText value="Historique de la conversation"/>
+                            <h:inputTextarea value="#{bb.conversation}"
+                                             readonly="true"
+                                             cols="50"
+                                             rows="25"/>
+                        </h:panelGroup>
                         <h:inputTextarea id="question" value="#{bb.question}" title="Question"
                                          cols="50" rows="5"/>
                         <h:commandButton value="Envoyer la question" action="#{bb.envoyer}"/>

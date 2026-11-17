@@ -1,7 +1,6 @@
 package ht.mbds.tarrouzi.tp2_tarrouzi.jsf;
 
-import ht.mbds.tarrouzi.tp2_tarrouzi.llm.JsonAdapterPourGemini;
-import ht.mbds.tarrouzi.tp2_tarrouzi.llm.LlmInteraction;
+import ht.mbds.tarrouzi.tp2_tarrouzi.llm.LlmClient;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.model.SelectItem;
@@ -19,14 +18,11 @@ import java.util.List;
 public class Bb implements Serializable {
 
     @Inject
-    private JsonAdapterPourGemini jsonAdapter;
-
+    private LlmClient llmClient;
     @Inject
     private FacesContext facesContext;
 
-    private boolean debug = true;
-    private String texteRequeteJson;
-    private String texteReponseJson;
+
 
     private String roleSysteme;
     private boolean roleSystemeChangeable = true;
@@ -38,13 +34,6 @@ public class Bb implements Serializable {
     public Bb() {
     }
 
-    public boolean isDebug() { return debug; }
-    public void setDebug(boolean debug) { this.debug = debug; }
-
-    public String getTexteRequeteJson() { return texteRequeteJson; }
-    public void setTexteRequeteJson(String t) { this.texteRequeteJson = t; }
-    public String getTexteReponseJson() { return texteReponseJson; }
-    public void setTexteReponseJson(String t) { this.texteReponseJson = t; }
 
     public String getRoleSysteme() { return roleSysteme; }
     public void setRoleSysteme(String roleSysteme) { this.roleSysteme = roleSysteme; }
@@ -63,42 +52,56 @@ public class Bb implements Serializable {
     }
 
     public String envoyer() {
-        if (this.question == null || this.question.isBlank()) {
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Texte question vide", "Il manque le texte de la question");
-            facesContext.addMessage(null, message);
+
+        if (question == null || question.isBlank()) {
+            facesContext.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Question vide",
+                    "Veuillez saisir une question."
+            ));
+
             return null;
         }
 
-        if (this.conversation.isEmpty()) { // début de la conversation
-            this.roleSystemeChangeable = false;
-            String role = (this.roleSysteme == null || this.roleSysteme.isBlank())
-                    ? "You are a helpful assistant."
-                    : this.roleSysteme;
-            this.jsonAdapter.setSystemRole(role);
-        }
-
         try {
-            LlmInteraction interaction = jsonAdapter.envoyerRequete(this.question);
-            this.reponse = interaction.reponseExtraite();
-            this.texteRequeteJson = interaction.questionJson();
-            this.texteReponseJson = interaction.reponseJson();
+            // Initialiser le rôle uniquement au début du chat
+            if (roleSystemeChangeable) {
+
+                String role = (roleSysteme == null || roleSysteme.isBlank())
+                        ? "You are a helpful assistant."
+                        : roleSysteme;
+
+                llmClient.setSystemRole(role);
+            }
+
+            // Envoyer la question avec LangChain4j
+            reponse = llmClient.chat(question);
+
+            roleSystemeChangeable = false;
+
+            // Ajouter l'échange à l'historique affiché
+            afficherConversation();
+
         } catch (Exception e) {
-            this.reponse = "Erreur : " + e.getMessage();
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Problème de connexion avec l'API du LLM",
-                    "Problème de connexion avec l'API du LLM" + e.getMessage()
-                            + "\n" + Arrays.toString(e.getStackTrace()));
-            facesContext.addMessage(null, message);
+            facesContext.addMessage(null, new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Erreur lors de l'appel au LLM",
+                    "Impossible d'obtenir une réponse. " + e.getMessage()
+            ));
         }
 
-        afficherConversation();
         return null;
     }
 
-    public String nouveauChat() {
-        return "index";
-    }
+
+public String nouveauChat() {
+    question = null;
+    reponse = null;
+    conversation = new StringBuilder();
+    roleSystemeChangeable = true;
+
+    return null;
+}
 
     private void afficherConversation() {
         this.conversation.append("== User:\n").append(question)
